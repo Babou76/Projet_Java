@@ -7,10 +7,31 @@ public class Controller {
         this.model = model;
         this.view = view;
     }
+    public void showHomePage1() {
+        view.dispose(); // Fermer la page de connexion ou d'enregistrement
+        view = new View(); // Créer une nouvelle instance de la vue
+        view.setController(this);
+        view.showHomePage(); // Afficher la page d'accueil
+        view.showHomePage1();
+    }
+
 
     public void registerCustomer(String firstName, String lastName, String password, String phoneNumber, String address) {
         model.registerCustomer(firstName, lastName, password, phoneNumber, address);
+        showHomePage1();
     }
+
+    public void loginCustomer(String username, String password) {
+        // Vérifier les informations de connexion dans le modèle
+        boolean isValid = model.checkCredentials(username, password);
+        if (isValid) {
+            System.out.println("Connexion réussie !");
+            showHomePage1(); // Afficher la page d'accueil après la connexion réussie
+        } else {
+            System.out.println("Nom d'utilisateur ou mot de passe incorrect.");
+        }
+    }
+
 
     // Ajouter d'autres méthodes de contrôleur si nécessaire
 }

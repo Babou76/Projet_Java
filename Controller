@@ -1,7 +1,12 @@
 // Controller.java (Contrôleur)
+package controller;
+
+import model.Model; // Importation depuis le package model
+import view.View; // Importation depuis le package view
+
 public class Controller {
-    private Model model;
-    private View view;
+    public Model model;
+    public View view;
 
     public Controller(Model model, View view) {
         this.model = model;
@@ -29,6 +34,19 @@ public class Controller {
             showHomePage1(); // Afficher la page d'accueil après la connexion réussie
         } else {
             System.out.println("Nom d'utilisateur ou mot de passe incorrect.");
+        }
+    }
+
+    public void loginEmployee(String username, String password) {
+        // Vérifier les informations de connexion dans le modèle pour les employés
+        boolean isValidEmployee = model.checkEmployeeCredentials(username, password);
+        if (isValidEmployee) {
+            System.out.println("Connexion réussie en tant qu'employé !");
+            showHomePage1();
+            // Ajouter votre logique pour la page d'accueil pour les employés ici
+        } else {
+            System.out.println("Nom d'utilisateur ou mot de passe incorrect pour l'employé.");
+            // Afficher un message d'erreur si la connexion échoue pour les employés
         }
     }
 

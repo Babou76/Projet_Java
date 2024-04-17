@@ -1,4 +1,7 @@
-// Main.java (Contrôleur)
+// Main.java
+import view.View;
+import controller.Controller;
+import model.Model;
 import javax.swing.*;
 
 public class Main {

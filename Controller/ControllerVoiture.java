@@ -19,6 +19,7 @@ public class ControllerVoiture {
     class EnregistrerListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             ModelVoiture voiture = view.getVoitureFromInput();
+
             // Appel à la méthode pour enregistrer la voiture dans la base de données
             enregistrerVoitureDansLaBaseDeDonnees(voiture);
         }
@@ -30,7 +31,7 @@ public class ControllerVoiture {
         //String password = "mon_mot_de_passe";
 
         try (Connection conn = DriverManager.getConnection(Model.DB_URL, Model.USER, Model.PASS)) {
-            String query = "INSERT INTO voiture (marque, model, date_achat, category, prix, nombre_siege, type_transmission, specification, description) " +
+            String query = "INSERT INTO car (Car_brand, Car_name, Car_Date, Car_category, Car_PricePerday, Car_NbSeat, Car_transmission, Car_specification, Car_Description) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             PreparedStatement statement = conn.prepareStatement(query);

@@ -1,13 +1,15 @@
-package View;
+package view;
 
-import Model.ModelVoiture;
+import controller.ControllerVoiture;
+import model.ModelVoiture;
 
 import javax.swing.*;
-import java.awt.event.ActionListener;
+import java.awt.*;
 import java.util.Date;
 
 public class ViewFormVoiture {
-    private JFrame frame;
+    //private JFrame frame;
+   private ControllerVoiture controllerVoitureResgister;
     private JTextField marqueField;
     private JTextField modelField;
     private JComboBox<String> categoryComboBox;
@@ -16,17 +18,27 @@ public class ViewFormVoiture {
     private JComboBox<String> transmissionComboBox;
     private JComboBox<String> specificationComboBox;
     private JTextArea descriptionArea;
-    private JButton enregistrerButton;
 
-    public ViewFormVoiture() {
-        frame = new JFrame("Enregistrement Voiture");
+//    public ViewFormVoiture(ControllerVoiture controllerVoiture) {
+//        this.controllerVoitureResgister = controllerVoiture;
+//    }
+    // private JButton enregistrerButton;
+
+//    public ViewFormVoiture() {
+//    controllerVoitureResgister = new ControllerVoiture();
+////
+//    }
+
+    public void showForm() {
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new GridLayout(5, 2));
 
         // Initialisation des composants graphiques
 
         marqueField = new JTextField(20);
         modelField = new JTextField(20);
-        String[] category = {"A", "B", "C", "D"};
-        categoryComboBox = new JComboBox<>(category);
+        String[] categori = {"A", "B", "C", "D"};
+        categoryComboBox = new JComboBox<>(categori);
         prixField = new JTextField(10);
         nombreSiegeSpinner = new JSpinner(new SpinnerNumberModel(2, 1, 100, 1));
         String[] transmissions = {"Automatique", "Manuelle"};
@@ -34,37 +46,38 @@ public class ViewFormVoiture {
         String[] specifications = {"Essence", "Diesel", "Hybride", "Electrique"};
         specificationComboBox = new JComboBox<>(specifications);
         descriptionArea = new JTextArea(5, 20);
-        enregistrerButton = new JButton("Enregistrer");
+        // enregistrerButton = new JButton("Enregistrer");
 
         // Configuration du layout
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(new JLabel("Marque:"));
-        panel.add(marqueField);
-        panel.add(new JLabel("Modèle:"));
-        panel.add(modelField);
-        panel.add(new JLabel("Catégorie:"));
-        panel.add(categoryComboBox);
-        panel.add(new JLabel("Prix:"));
-        panel.add(prixField);
-        panel.add(new JLabel("Nombre de sièges:"));
-        panel.add(nombreSiegeSpinner);
-        panel.add(new JLabel("Type de transmission:"));
-        panel.add(transmissionComboBox);
-        panel.add(new JLabel("Spécification:"));
-        panel.add(specificationComboBox);
-        panel.add(new JLabel("Description:"));
-        panel.add(new JScrollPane(descriptionArea));
-        panel.add(enregistrerButton);
 
-        frame.add(panel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }
-
-
-    public void afficher() {
-        frame.pack();
-        frame.setVisible(true);
+        // panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        formPanel.add(new JLabel("Marque:"));
+        formPanel.add(marqueField);
+        formPanel.add(new JLabel("Modèle:"));
+        formPanel.add(modelField);
+        formPanel.add(new JLabel("Catégorie:"));
+        formPanel.add(categoryComboBox);
+        formPanel.add(new JLabel("Prix:"));
+        formPanel.add(prixField);
+        formPanel.add(new JLabel("Nombre de sièges:"));
+        formPanel.add(nombreSiegeSpinner);
+        formPanel.add(new JLabel("Type de transmission:"));
+        formPanel.add(transmissionComboBox);
+        formPanel.add(new JLabel("Spécification:"));
+        formPanel.add(specificationComboBox);
+        formPanel.add(new JLabel("Description:"));
+        formPanel.add(new JScrollPane(descriptionArea));
+        // formPanel.add(enregistrerButton);
+       // int result = JOptionPane.showConfirmDialog(null, formPanel, "Enregistrement Voiture", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(null, formPanel, "Enregistrement Voiture", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            if (controllerVoitureResgister != null) {
+                controllerVoitureResgister.enregister();
+            } else {
+                System.out.println("Erreur : controllerVoitureResgister non initialisé !");
+                // Gérer l'erreur de manière appropriée (afficher un message d'erreur, lever une exception, etc.)
+            }
+        }
     }
 
     public ModelVoiture getVoitureFromInput() {
@@ -78,9 +91,5 @@ public class ViewFormVoiture {
         String description = descriptionArea.getText();
 
         return new ModelVoiture(marque, model, new Date(), category, prix, nombreSiege, transmission, specification, description);
-    }
-
-    public void setEnregistrerListener(ActionListener listener) {
-        enregistrerButton.addActionListener(listener);
     }
 }

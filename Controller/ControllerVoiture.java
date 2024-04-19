@@ -1,10 +1,8 @@
-package Controller;
+package controller;
 
-import Model.*;
-import View.*;
+import model.*;
+import view.*;
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.sql.*;
 
 
@@ -13,22 +11,22 @@ public class ControllerVoiture {
 
     public ControllerVoiture(ViewFormVoiture view) {
         this.view = view;
-        this.view.setEnregistrerListener(new EnregistrerListener());
     }
 
-    class EnregistrerListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            ModelVoiture voiture = view.getVoitureFromInput();
 
-            // Appel à la méthode pour enregistrer la voiture dans la base de données
-            enregistrerVoitureDansLaBaseDeDonnees(voiture);
+    public void enregister() {
+        if (view == null) {
+            System.out.println("Erreur : l'objet ViewFormVoiture n'est pas initialisé.");
+            return;
         }
+
+        ModelVoiture voiture = view.getVoitureFromInput();
+
+        // Appel à la méthode pour enregistrer la voiture dans la base de données
+        enregistrerVoitureDansLaBaseDeDonnees(voiture);
     }
 
     private void enregistrerVoitureDansLaBaseDeDonnees(ModelVoiture voiture) {
-        //String url = "jdbc:mysql://localhost:3306/ma_base_de_donnees";
-        //String username = "mon_utilisateur";
-        //String password = "mon_mot_de_passe";
 
         try (Connection conn = DriverManager.getConnection(Model.DB_URL, Model.USER, Model.PASS)) {
             String query = "INSERT INTO car (Car_brand, Car_name, Car_Date, Car_category, Car_PricePerday, Car_NbSeat, Car_transmission, Car_specification, Car_Description) " +

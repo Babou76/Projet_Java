@@ -1,7 +1,9 @@
-package Model;
+package model;
+
 import java.util.Date;
 
 public class ModelVoiture {
+    private int id;
     private String marque;
     private String modele;
     private Date dateAchat;
@@ -14,8 +16,8 @@ public class ModelVoiture {
 
     // Constructeur
     public ModelVoiture(String marque, String modele, Date dateAchat, String category,
-                   int prix, int nombreSiege, String typeTransmission,
-                   String specification, String description) {
+                        int prix, int nombreSiege, String typeTransmission,
+                        String specification, String description) {
         this.marque = marque;
         this.modele = modele;
         this.dateAchat = dateAchat;
@@ -29,6 +31,13 @@ public class ModelVoiture {
 
     // Getters et Setters (pour chaque attribut)
 // Getters et Setters pour chaque attribut
+
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getMarque() {
         return marque;
@@ -65,4 +74,6 @@ public class ModelVoiture {
     public String getDescription() {
         return description;
     }
+
 }
+

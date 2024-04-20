@@ -1,30 +1,30 @@
 package controller;
 
+
 import model.*;
-import view.*;
+import view.CarView;
+
 import javax.swing.*;
 import java.sql.*;
 
 
 public class ControllerVoiture {
-    private ViewFormVoiture view;
+    private CarModel model;
+    private CarView view;
 
-    public ControllerVoiture(ViewFormVoiture view) {
+    public ControllerVoiture(){}
+    public ControllerVoiture(CarModel model, CarView view) {
+        this.model = model;
         this.view = view;
     }
 
+    public void enregister(ModelVoiture voiture) {
 
-    public void enregister() {
-        if (view == null) {
-            System.out.println("Erreur : l'objet ViewFormVoiture n'est pas initialisé.");
-            return;
-        }
+        enregistrerVoitureDansLaBaseDeDonnees(voiture); // Appel à la méthode pour enregistrer la voiture dans la base de données
 
-        ModelVoiture voiture = view.getVoitureFromInput();
-
-        // Appel à la méthode pour enregistrer la voiture dans la base de données
-        enregistrerVoitureDansLaBaseDeDonnees(voiture);
     }
+
+
 
     private void enregistrerVoitureDansLaBaseDeDonnees(ModelVoiture voiture) {
 
@@ -53,5 +53,6 @@ public class ControllerVoiture {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(null, "Erreur SQL: " + ex.getMessage());
         }
+
     }
 }

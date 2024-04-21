@@ -1,0 +1,317 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+
+public class Combo {
+
+    static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+    static final String DB_URL = "jdbc:mysql://localhost/website1";
+    static final String USER = "root";
+    static final String PASS = "";
+
+    private JFrame frame, FiltersFrame;
+    private JComboBox<String> categoryComboBox;
+    private JButton validateButton;
+    private JSpinner debutSpinner, finSpinner;
+    private SimpleDateFormat dateFormat;
+    private String selectedCategory;
+    private String debutDate, finDate, licence;
+
+    public Combo() {
+        // Initialize UI components
+        frame = new JFrame("Sélection véhicule");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        categoryComboBox = new JComboBox<>(new String[]{"SUV", "Citadine", "Break", "Coupe", "Monospace", "Routiere","Mini"});
+        validateButton = new JButton("Rechercher");
+
+        JPanel panel = new JPanel();
+
+        panel.add(new JLabel("Numero Licence Utilisateur:"));
+        JTextField textField = new JTextField(20);
+        licence = textField.getText();
+        panel.add(textField);
+
+        panel.add(new JLabel("Select Category:"));
+        panel.add(categoryComboBox);
+
+        dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        debutSpinner = new JSpinner(new SpinnerDateModel());
+        debutSpinner.setEditor(new JSpinner.DateEditor(debutSpinner, "dd/MM/yyyy HH:mm"));
+        debutSpinner.setValue(new java.util.Date()); // Set initial value
+        finSpinner = new JSpinner(new SpinnerDateModel());
+        finSpinner.setEditor(new JSpinner.DateEditor(finSpinner, "dd/MM/yyyy HH:mm"));
+        finSpinner.setValue(new java.util.Date()); // Set initial value
+
+        panel.add(new JLabel("Date et heure de début de contrat:"));
+        panel.add(debutSpinner);
+        panel.add(new JLabel("Date et heure de fin de contrat:"));
+        panel.add(finSpinner);
+
+        panel.add(validateButton);
+
+        frame.add(panel);
+        frame.pack();
+        frame.setVisible(true);
+
+        // Add ActionListener to the validateButton
+        validateButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // Get the selected category
+                selectedCategory = (String) categoryComboBox.getSelectedItem();
+
+                // Get the selected dates
+                debutDate = dateFormat.format(debutSpinner.getValue());
+                finDate = dateFormat.format(finSpinner.getValue());
+
+                frame.dispose();
+                CreateFiltersFrame();
+            }
+        });
+    }
+
+    private void CreateFiltersFrame() {
+        FiltersFrame = new JFrame("Filtres Catégories");
+        FiltersFrame.setSize(400, 300);
+        FiltersFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JLabel headerLabel = new JLabel("Réservations possibles : ");
+
+        JPanel panel = new JPanel();
+        panel.add(headerLabel);
+
+        String message = rechercher_Categories_Dates(selectedCategory, debutDate, finDate, Double.parseDouble(licence));
+        JTextArea textArea = new JTextArea(message);
+        textArea.setEditable(false); // Make it read-only
+        JScrollPane scrollPane = new JScrollPane(textArea); // Add it within a scroll pane
+        panel.add(scrollPane);
+
+        FiltersFrame.add(panel);
+        FiltersFrame.setVisible(true);
+
+    }
+
+    public void verif_dispo(String debut, String fin) {
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+            // Get the current date and time
+            Date currentDate = new Date();
+
+            // Format the current date and time
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String currentDateTime = dateFormat.format(currentDate);
+
+            // Prepare the SQL query
+            String sqlQuery = "SELECT ID FROM booking WHERE ? BETWEEN ? AND ?";
+            PreparedStatement pstmt = conn.prepareStatement(sqlQuery);
+
+            // Format the debut and fin dates using SimpleDateFormat
+            dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date debutDate = dateFormat.parse(debut);
+            Date finDate = dateFormat.parse(fin);
+
+            // Set parameters
+            pstmt.setString(1, currentDateTime);
+            pstmt.setTimestamp(2, new Timestamp(debutDate.getTime()));
+            pstmt.setTimestamp(3, new Timestamp(finDate.getTime()));
+
+            ResultSet rs = pstmt.executeQuery();
+
+            // If the current date and time fall within any reservation interval
+            if (rs.next()) {
+                // Get the car ID associated with the reservation
+                int carID = rs.getInt("ID");
+
+                // Update the availability_car attribute to 0 for the associated car
+                String updateQuery1 = "UPDATE car1 SET Car_availibility = 0 WHERE ID = ?";
+                PreparedStatement updateStmt = conn.prepareStatement(updateQuery1);
+                updateStmt.setInt(1, carID);
+                updateStmt.executeUpdate();
+            }
+
+            /***  Rendre le véhicule à nouveau disponible si la date est passée ***/
+            // Prepare the SQL query
+            String sqlQuery2 = "SELECT ID FROM booking WHERE ? NOT BETWEEN ? AND ?";
+            PreparedStatement pstmt2 = conn.prepareStatement(sqlQuery2);
+
+            // Set parameters
+            pstmt2.setString(1, currentDateTime);
+            pstmt2.setTimestamp(2, new Timestamp(debutDate.getTime()));
+            pstmt2.setTimestamp(3, new Timestamp(finDate.getTime()));
+
+            ResultSet rs2 = pstmt2.executeQuery();
+
+            // If the current date and time fall within any reservation interval
+            if (rs2.next()) {
+                // Get the car ID associated with the reservation
+                int carID = rs2.getInt("ID");
+
+                // Update the availability_car attribute to 0 for the associated car
+                String updateQuery2 = "UPDATE car1 SET Car_availibility = 1 WHERE ID = ?";
+                PreparedStatement updateStmt = conn.prepareStatement(updateQuery2);
+                updateStmt.setInt(1, carID);
+                updateStmt.executeUpdate();
+            }
+
+            // Close resources
+            rs.close();
+            pstmt.close();
+            pstmt2.close();
+            conn.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void ajout_reservation(String debut, String fin, int id, double licence) {
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+            // Prepare the SQL query
+            String sqlQuery = "INSERT INTO booking (Booking_Start, Booking_End, ID, LicenceUser) VALUES (?, ?, ?, ?)";
+
+            PreparedStatement pstmt = conn.prepareStatement(sqlQuery);
+
+            // Format the debut and fin dates using SimpleDateFormat
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date debutDate = dateFormat.parse(debut);
+            Date finDate = dateFormat.parse(fin);
+
+            // Set parameters
+            pstmt.setTimestamp(1, new Timestamp(debutDate.getTime()));
+            pstmt.setTimestamp(2, new Timestamp(finDate.getTime()));
+            pstmt.setInt(3, id);
+
+            // Execute the query
+            pstmt.executeUpdate();
+
+            // Close resources
+            pstmt.close();
+            conn.close();
+
+        } catch (SQLException | ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String rechercher_Categories_Dates(String category, String debut, String fin, double licence) {
+        StringBuilder result = new StringBuilder();
+
+        try {
+            Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+            // Prepare the SQL query
+            String sqlQuery = "SELECT * FROM car1 WHERE categories = ? AND Booking_Start <= ? AND Booking_End >= ? AND Car_availibility = 1";
+
+            // Format the Date objects into strings using SimpleDateFormat
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+            // Format the debut and fin dates
+            String debutFormatted = dateFormat.format(debutSpinner.getValue());
+            String finFormatted = dateFormat.format(finSpinner.getValue());
+
+            PreparedStatement pstmt = conn.prepareStatement(sqlQuery);
+
+            // Set the formatted dates as parameters in the PreparedStatement
+
+            // Set the formatted dates as parameters in the PreparedStatement
+            pstmt.setString(1, category);
+            pstmt.setString(2, debutFormatted);
+            pstmt.setString(3, finFormatted);
+
+            /*pstmt.setString(1, category);
+            pstmt.setString(2, debut);
+            pstmt.setString(3, fin);*/
+
+            // Execute the query
+            ResultSet rs = pstmt.executeQuery();
+
+            JPanel panel = new JPanel(new GridBagLayout());
+
+            // Display the results
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.CENTER;
+            gbc.insets = new Insets(5, 5, 5, 5);
+
+            // Display the results
+            result.append("Vehicules disponibles : \n");
+            while (rs.next()) {
+                int id = rs.getInt("ID");
+                String Car_brand = rs.getString("Car_brand");
+                String Car_name = rs.getString("Car_name");
+                int CarPricePerDay = rs.getInt("Car_PricePerDay");
+
+                JLabel label = new JLabel("<html>ID: " + id + "<br>Brand: " + Car_brand + "<br>Name: " + Car_name + "<br>Price per day: " + CarPricePerDay + "</html>");
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                panel.add(label, gbc);
+
+                gbc.gridy++; // Move to the next row
+
+                /*result.append(" ID: ").append(id).append("\n");
+                result.append(" Brand: ").append(Car_brand).append("\n");
+                result.append(" Name: ").append(Car_name).append("\n");
+                result.append(" Price per day: ").append(CarPricePerDay).append("\n");
+                result.append("\n\n");*/
+
+                JButton selectButton = new JButton("Selectionner");
+                selectButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+                panel.add(selectButton, gbc); // Add button to panel
+
+                gbc.gridy++; // Move to the next row
+
+                // Add ActionListener to the selectButton
+                selectButton.addActionListener(new ActionListener() {
+                    private boolean clicked = false;
+
+                    public void actionPerformed(ActionEvent e) {
+                        if (!clicked) {
+                            ajout_reservation(debutFormatted, finFormatted, id, licence);
+                            clicked = true;
+                            selectButton.setEnabled(false); // Disable the button after clicking
+                            FiltersFrame.dispose();
+                        }
+                    }
+                });
+
+                /*JLabel result2 = new JLabel(result.toString());
+                result2.setAlignmentX(Component.CENTER_ALIGNMENT);
+                panel.add(result2); // Add text to panel */
+
+                panel.add(Box.createVerticalStrut(10)); // Add vertical space between components
+                result.setLength(0);
+
+                verif_dispo(debutFormatted, finFormatted);
+            }
+
+            JScrollPane scrollPane = new JScrollPane(panel);
+            FiltersFrame.add(scrollPane);
+            FiltersFrame.setVisible(true);
+
+            // Close connections
+            rs.close();
+            pstmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result.toString();
+    }
+
+    public static void main(String[] args) {
+        Combo combo = new Combo();
+    }
+}
+
+
+
